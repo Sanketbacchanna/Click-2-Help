@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Voice SOS Safety App</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#d71920">
+
+</head>
+
+<body>
+
+  <button onclick="startListening()">Start Safety Mode</button>
+
+  <p id="status">Idle</p>
+  <p id="location">Location: Not detected</p>
+
+  <script src="voice.js"></script>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js")
+        .then(() => console.log("Service Worker Registered"))
+        .catch(err => console.log("SW Error", err));
+    }
+  </script>
+
+</body>
+</html>
