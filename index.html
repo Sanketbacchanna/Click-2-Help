@@ -296,14 +296,25 @@ function triggerSOS() {
         return;
     }
 
-    navigator.geolocation.getCurrentPosition(pos => {
+    navigator.geolocation.getCurrentPosition(async pos => {
 
-        let link = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+        let location = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
 
-        // Call first contact
-        window.location.href = `tel:${contacts[0].phone}`;
+        let numbers = contacts.map(c => c.phone);
 
-        alert("🚨 SOS Sent!\nLocation:\n" + link);
+        // SEND TO BACKEND
+        await fetch("http://localhost:3000/send-sos", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                contacts: numbers,
+                location: location
+            })
+        });
+
+        alert("🚨 SOS Sent to all contacts!");
     });
 }
 
