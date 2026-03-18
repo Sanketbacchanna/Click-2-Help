@@ -2,8 +2,9 @@ const cacheName = "voice-sos-cache-v2";
 
 const filesToCache = [
   "./",
+  // "./index.html",
+  // "./voice.js",
   "./index.html",
-  "./voice.js",
   "./icon-192.png",
   "./icon-512.png"
 ];

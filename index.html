@@ -1,32 +1,341 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Voice SOS Safety App</title>
+<title>Voice SOS Safety App</title>
 
-  <!-- PWA -->
-  <link rel="manifest" href="./manifest.json">
+<link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#d71920">
 
+<style>
+
+/* ===== BODY ===== */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: white;
+}
+
+/* ===== TOP BAR ===== */
+.topbar {
+    background: #d71920;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.menu-btn {
+    font-size: 26px;
+    cursor: pointer;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 260px;
+    height: 100%;
+    background: #222;
+    padding-top: 60px;
+    transition: 0.3s;
+    z-index: 1000;
+}
+
+.sidebar a {
+    display: block;
+    padding: 15px;
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.sidebar a:hover {
+    background: #444;
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+/* ===== SECTIONS ===== */
+.section {
+    display: none;
+    padding: 15px;
+}
+
+.section.active {
+    display: block;
+}
+
+/* ===== SOS BUTTON ===== */
+.sos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 75vh;
+}
+
+/* RESPONSIVE BUTTON */
+.sos-btn {
+    width: 55vw;
+    height: 55vw;
+    max-width: 250px;
+    max-height: 250px;
+    border-radius: 50%;
+    background: red;
+    color: white;
+    font-size: 6vw;
+    font-size: 30px;
+    border: none;
+    cursor: pointer;
+    animation: pulse 2s infinite;
+}
+
+/* PULSE */
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255,0,0,0.7); }
+    70% { box-shadow: 0 0 0 40px rgba(255,0,0,0); }
+}
+
+/* INPUTS */
+input {
+    width: 90%;
+    max-width: 300px;
+    padding: 10px;
+    margin: 8px 0;
+    font-size: 16px;
+}
+
+/* BUTTONS */
+button {
+    padding: 10px 15px;
+    margin-top: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* CONTACT LIST */
+ul {
+    padding-left: 15px;
+}
+
+/* ===== MOBILE FIX ===== */
+@media (max-width: 600px) {
+
+    .topbar {
+        padding: 10px;
+    }
+
+    .menu-btn {
+        font-size: 24px;
+    }
+
+    .sos {
+        height: 65vh;
+    }
+
+    .section {
+        padding: 10px;
+    }
+
+    h2 {
+        font-size: 20px;
+    }
+}
+
+/* ===== TABLET ===== */
+@media (min-width: 601px) and (max-width: 1024px) {
+
+    .sos-btn {
+        width: 40vw;
+        height: 40vw;
+        font-size: 4vw;
+    }
+}
+
+/* ===== DESKTOP ===== */
+@media (min-width: 1025px) {
+
+    .sos-btn {
+        width: 220px;
+        height: 220px;
+        font-size: 28px;
+    }
+
+    .section {
+        max-width: 600px;
+        margin: auto;
+    }
+}
+
+</style>
 </head>
 
 <body>
 
-  <button onclick="startListening()">Start Safety Mode</button>
+<!-- TOP BAR -->
+<div class="topbar">
+    <span class="menu-btn" onclick="openMenu()">☰</span>
+</div>
 
-  <p id="status">Idle</p>
-  <p id="location">Location: Not detected</p>
+<!-- SIDEBAR -->
+<div id="sidebar" class="sidebar">
+    <span class="close-btn" onclick="closeMenu()">×</span>
 
-  <script src="voice.js"></script>
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("sw.js")
+    <a onclick="showSection('home')">🏠 Home</a>
+    <a onclick="showSection('contacts')">👥 Contacts</a>
+    <a onclick="showSection('voice')">🎤 Voice</a>
+    <a onclick="showSection('location')">📍 Location</a>
+    <a onclick="showSection('about')">ℹ️ About</a>
+</div>
+
+<!-- HOME -->
+<div id="home" class="section active">
+    <div class="sos">
+        <button class="sos-btn" onclick="triggerSOS()">SOS</button>
+    </div>
+</div>
+
+<!-- CONTACTS -->
+<div id="contacts" class="section">
+    <h2>Contacts</h2>
+
+    <input id="name" placeholder="Name">
+    <input id="phone" placeholder="Phone">
+    <button onclick="addContact()">Add</button>
+
+    <ul id="contactList"></ul>
+</div>
+
+<!-- VOICE -->
+<div id="voice" class="section">
+    <h2>Voice Activation</h2>
+    <button onclick="startListening()">Start Listening</button>
+    <p id="voiceStatus">Not Listening</p>
+</div>
+
+<!-- LOCATION -->
+<div id="location" class="section">
+    <h2>Location</h2>
+    <button onclick="getLocation()">Get Location</button>
+    <p id="locationText"></p>
+</div>
+
+<!-- ABOUT -->
+<div id="about" class="section">
+    <h2>About</h2>
+    <p>Voice SOS App - Emergency Safety System</p>
+</div>
+
+<script>
+
+/* MENU */
+function openMenu() {
+    document.getElementById("sidebar").style.left = "0";
+}
+function closeMenu() {
+    document.getElementById("sidebar").style.left = "-260px";
+}
+
+/* NAVIGATION */
+function showSection(id) {
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    closeMenu();
+}
+
+/* CONTACTS */
+function addContact() {
+    let name = document.getElementById("name").value;
+    let phone = document.getElementById("phone").value;
+
+    if (!name || !phone) return alert("Enter details");
+
+    let contacts = JSON.parse(localStorage.getItem("contacts")) || [];
+    contacts.push({name, phone});
+    localStorage.setItem("contacts", JSON.stringify(contacts));
+
+    displayContacts();
+}
+
+function displayContacts() {
+    let contacts = JSON.parse(localStorage.getItem("contacts")) || [];
+    let list = document.getElementById("contactList");
+    list.innerHTML = "";
+
+    contacts.forEach(c => {
+        list.innerHTML += `<li>${c.name} - ${c.phone}</li>`;
+    });
+}
+displayContacts();
+
+/* LOCATION */
+function getLocation() {
+    navigator.geolocation.getCurrentPosition(pos => {
+        let link = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+        document.getElementById("locationText").innerHTML =
+            `<a href="${link}" target="_blank">View Location</a>`;
+    });
+}
+
+/* SOS FUNCTION */
+function triggerSOS() {
+
+    let contacts = JSON.parse(localStorage.getItem("contacts")) || [];
+
+    if (contacts.length === 0) {
+        alert("No contacts saved!");
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(pos => {
+
+        let link = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+
+        // Call first contact
+        window.location.href = `tel:${contacts[0].phone}`;
+
+        alert("🚨 SOS Sent!\nLocation:\n" + link);
+    });
+}
+
+/* VOICE DETECTION (AUTO + MANUAL) */
+function startListening() {
+
+    const recognition = new webkitSpeechRecognition();
+    recognition.continuous = true;
+    recognition.start();
+
+    document.getElementById("voiceStatus").innerText = "Listening...";
+
+    recognition.onresult = function(e) {
+        let text = e.results[e.results.length-1][0].transcript.toLowerCase();
+
+        if (text.includes("help me") || text.includes("save me")) {
+            triggerSOS();
+        }
+    };
+}
+
+/* AUTO START VOICE (IMPORTANT) */
+startListening();
+
+/* SERVICE WORKER */
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js")
         .then(() => console.log("Service Worker Registered"))
         .catch(err => console.log("SW Error", err));
-    }
-  </script>
+}
+
+</script>
 
 </body>
 </html>
