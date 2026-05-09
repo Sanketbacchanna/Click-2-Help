@@ -1,352 +1,815 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeGuard SOS | Emergency Assistant</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#FF3B30">
+    <!-- Google Fonts: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF3B30;
+            --primary-glow: rgba(255, 59, 48, 0.4);
+            --bg: #0A0A0B;
+            --surface: rgba(255, 255, 255, 0.05);
+            --surface-border: rgba(255, 255, 255, 0.1);
+            --text: #FFFFFF;
+            --text-dim: #A0A0A0;
+            --glass: rgba(20, 20, 22, 0.8);
+        }
 
-<title>Voice SOS Safety App</title>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#d71920">
+        body {
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden; /* Prevent body scroll, use sections for scroll */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-<style>
+        /* Animated Background */
+        .bg-glow {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80vw;
+            height: 80vw;
+            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+            z-index: -1;
+            filter: blur(60px);
+            opacity: 0.5;
+            animation: pulse-bg 8s infinite alternate ease-in-out;
+        }
 
-/* ===== BODY ===== */
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #111;
-    color: white;
-}
+        @keyframes pulse-bg {
+            from { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+            to { transform: translate(-50%, -50%) scale(1.2); opacity: 0.6; }
+        }
 
-/* ===== TOP BAR ===== */
-.topbar {
-    background: #d71920;
-    padding: 12px;
-    display: flex;
-    align-items: center;
-}
+        /* Top Bar */
+        .top-bar {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--surface-border);
+            z-index: 100;
+        }
 
-.menu-btn {
-    font-size: 26px;
-    cursor: pointer;
-}
+        .logo {
+            font-weight: 700;
+            font-size: 20px;
+            letter-spacing: -0.5px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-/* ===== SIDEBAR ===== */
-.sidebar {
-    position: fixed;
-    top: 0;
-    left: -260px;
-    width: 260px;
-    height: 100%;
-    background: #222;
-    padding-top: 60px;
-    transition: 0.3s;
-    z-index: 1000;
-}
+        .menu-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+        }
 
-.sidebar a {
-    display: block;
-    padding: 15px;
-    color: white;
-    text-decoration: none;
-    font-size: 16px;
-}
+        /* Sidebar Overlay */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s;
+            z-index: 900;
+        }
 
-.sidebar a:hover {
-    background: #444;
-}
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
 
-.close-btn {
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    font-size: 28px;
-    cursor: pointer;
-}
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background: #121214;
+            padding: 80px 20px 20px;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            border-right: 1px solid var(--surface-border);
+        }
 
-/* ===== SECTIONS ===== */
-.section {
-    display: none;
-    padding: 15px;
-}
+        .sidebar.active {
+            left: 0;
+        }
 
-.section.active {
-    display: block;
-}
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
 
-/* ===== SOS BUTTON ===== */
-.sos {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 75vh;
-}
+        .nav-item {
+            padding: 16px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            transition: 0.2s;
+            color: var(--text-dim);
+        }
 
-/* RESPONSIVE BUTTON */
-.sos-btn {
-    width: 55vw;
-    height: 55vw;
-    max-width: 250px;
-    max-height: 250px;
-    border-radius: 50%;
-    background: red;
-    color: white;
-    font-size: 6vw;
-    font-size: 30px;
-    border: none;
-    cursor: pointer;
-    animation: pulse 2s infinite;
-}
+        .nav-item:hover, .nav-item.active {
+            background: var(--surface);
+            color: var(--text);
+        }
 
-/* PULSE */
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(255,0,0,0.7); }
-    70% { box-shadow: 0 0 0 40px rgba(255,0,0,0); }
-}
+        .nav-item.active {
+            border-left: 3px solid var(--primary);
+        }
 
-/* INPUTS */
-input {
-    width: 90%;
-    max-width: 300px;
-    padding: 10px;
-    margin: 8px 0;
-    font-size: 16px;
-}
+        /* Main Content Areas */
+        main {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
 
-/* BUTTONS */
-button {
-    padding: 10px 15px;
-    margin-top: 5px;
-    font-size: 16px;
-    cursor: pointer;
-}
+        .section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 30px 20px;
+            overflow-y: auto;
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-/* CONTACT LIST */
-ul {
-    padding-left: 15px;
-}
+        .section.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
 
-/* ===== MOBILE FIX ===== */
-@media (max-width: 600px) {
+        /* Home Section: SOS Button */
+        #home-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
 
-    .topbar {
-        padding: 10px;
-    }
+        .sos-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    .menu-btn {
-        font-size: 24px;
-    }
+        .sos-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            opacity: 0.5;
+            animation: ring-pulse 2s infinite ease-out;
+        }
 
-    .sos {
-        height: 65vh;
-    }
+        .sos-ring:nth-child(2) { animation-delay: 0.5s; }
+        .sos-ring:nth-child(3) { animation-delay: 1s; }
 
-    .section {
-        padding: 10px;
-    }
+        @keyframes ring-pulse {
+            from { transform: scale(0.8); opacity: 0.6; }
+            to { transform: scale(1.5); opacity: 0; }
+        }
 
-    h2 {
-        font-size: 20px;
-    }
-}
+        .sos-btn {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: none;
+            color: white;
+            font-size: 42px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 0 50px var(--primary-glow);
+            transition: 0.3s;
+            z-index: 10;
+        }
 
-/* ===== TABLET ===== */
-@media (min-width: 601px) and (max-width: 1024px) {
+        .sos-btn:active {
+            transform: scale(0.92);
+        }
 
-    .sos-btn {
-        width: 40vw;
-        height: 40vw;
-        font-size: 4vw;
-    }
-}
+        .sos-hint {
+            margin-top: 40px;
+            color: var(--text-dim);
+            font-size: 14px;
+            max-width: 240px;
+            line-height: 1.5;
+        }
 
-/* ===== DESKTOP ===== */
-@media (min-width: 1025px) {
+        /* Glass Cards */
+        .card {
+            background: var(--surface);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--surface-border);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
 
-    .sos-btn {
-        width: 220px;
-        height: 220px;
-        font-size: 28px;
-    }
+        h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
 
-    .section {
-        max-width: 600px;
-        margin: auto;
-    }
-}
+        /* Inputs & Buttons */
+        .input-group {
+            margin-bottom: 16px;
+        }
 
-</style>
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            margin-left: 4px;
+        }
+
+        input {
+            width: 100%;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--surface-border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            color: white;
+            font-family: inherit;
+            font-size: 16px;
+            transition: 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(0,0,0,0.4);
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        /* Contact List */
+        .contact-list {
+            margin-top: 24px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--surface-border);
+        }
+
+        .contact-info h4 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .contact-info p {
+            margin: 4px 0 0;
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #FF453A;
+            cursor: pointer;
+            padding: 8px;
+            font-size: 18px;
+            opacity: 0.6;
+            transition: 0.2s;
+        }
+
+        .delete-btn:hover {
+            opacity: 1;
+        }
+
+        /* Voice Status Indicator */
+        .voice-indicator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 40px 0;
+        }
+
+        .mic-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            transition: 0.3s;
+        }
+
+        .mic-icon.listening {
+            background: var(--primary);
+            box-shadow: 0 0 30px var(--primary-glow);
+            animation: mic-pulse 1.5s infinite;
+        }
+
+        @keyframes mic-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .status-text {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .sub-status {
+            color: var(--text-dim);
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* Location Card */
+        .location-card {
+            text-align: center;
+        }
+
+        .map-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        #locationText {
+            margin: 16px 0;
+            font-size: 14px;
+            color: var(--text-dim);
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #FFFFFF;
+            color: #000;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 2000;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+    </style>
 </head>
-
 <body>
 
-<!-- TOP BAR -->
-<div class="topbar">
-    <span class="menu-btn" onclick="openMenu()">☰</span>
-</div>
+    <div class="bg-glow"></div>
 
-<!-- SIDEBAR -->
-<div id="sidebar" class="sidebar">
-    <span class="close-btn" onclick="closeMenu()">×</span>
-
-    <a onclick="showSection('home')">🏠 Home</a>
-    <a onclick="showSection('contacts')">👥 Contacts</a>
-    <a onclick="showSection('voice')">🎤 Voice</a>
-    <a onclick="showSection('location')">📍 Location</a>
-    <a onclick="showSection('about')">ℹ️ About</a>
-</div>
-
-<!-- HOME -->
-<div id="home" class="section active">
-    <div class="sos">
-        <button class="sos-btn" onclick="triggerSOS()">SOS</button>
+    <div class="top-bar">
+        <div class="logo">
+            <span>🛡️</span>
+            <span>SafeGuard</span>
+        </div>
+        <button class="menu-toggle" onclick="toggleMenu()">☰</button>
     </div>
-</div>
 
-<!-- CONTACTS -->
-<div id="contacts" class="section">
-    <h2>Contacts</h2>
+    <!-- Sidebar & Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMenu()"></div>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-nav">
+            <div class="nav-item active" onclick="showSection('home')">
+                <span>🏠</span> Home
+            </div>
+            <div class="nav-item" onclick="showSection('contacts')">
+                <span>👥</span> Emergency Contacts
+            </div>
+            <div class="nav-item" onclick="showSection('voice')">
+                <span>🎤</span> Voice Activation
+            </div>
+            <div class="nav-item" onclick="showSection('location')">
+                <span>📍</span> Current Location
+            </div>
+            <div class="nav-item" onclick="showSection('about')">
+                <span>ℹ️</span> About SafeGuard
+            </div>
+        </div>
+    </nav>
 
-    <input id="name" placeholder="Name">
-    <input id="phone" placeholder="Phone">
-    <button onclick="addContact()">Add</button>
+    <main>
+        <!-- HOME SECTION -->
+        <section id="home-section" class="section active">
+            <div class="sos-container">
+                <div class="sos-ring"></div>
+                <div class="sos-ring"></div>
+                <div class="sos-ring"></div>
+                <button class="sos-btn" id="sos-btn" onclick="triggerSOS()">SOS</button>
+            </div>
+            <div class="sos-hint">
+                In case of emergency, press the button above or say "Help Me" loudly.
+            </div>
+        </section>
 
-    <ul id="contactList"></ul>
-</div>
+        <!-- CONTACTS SECTION -->
+        <section id="contacts-section" class="section">
+            <div class="card">
+                <h2>Add Contact</h2>
+                <div class="input-group">
+                    <label>Full Name</label>
+                    <input type="text" id="contact-name" placeholder="John Doe">
+                </div>
+                <div class="input-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="contact-phone" placeholder="+91 00000 00000">
+                </div>
+                <button class="btn-primary" onclick="addContact()">Add Contact</button>
+            </div>
 
-<!-- VOICE -->
-<div id="voice" class="section">
-    <h2>Voice Activation</h2>
-    <button onclick="startListening()">Start Listening</button>
-    <p id="voiceStatus">Not Listening</p>
-</div>
+            <div class="contact-list" id="contact-list">
+                <!-- Contacts will be injected here -->
+            </div>
+        </section>
 
-<!-- LOCATION -->
-<div id="location" class="section">
-    <h2>Location</h2>
-    <button onclick="getLocation()">Get Location</button>
-    <p id="locationText"></p>
-</div>
+        <!-- VOICE SECTION -->
+        <section id="voice-section" class="section">
+            <div class="card voice-indicator">
+                <div class="mic-icon" id="mic-icon">🎤</div>
+                <div class="status-text" id="voice-status">Waiting...</div>
+                <div class="sub-status" id="voice-subtext">Voice activation is running in the background.</div>
+                <button class="btn-primary" onclick="startVoiceRecognition()" style="margin-top: 10px;">Restart Listening</button>
+            </div>
+            <div class="card">
+                <h3>Voice Commands</h3>
+                <p style="color: var(--text-dim); line-height: 1.6;">
+                    The app listens for specific keywords to trigger an emergency alert automatically:
+                </p>
+                <ul style="color: var(--primary); font-weight: 600; padding-left: 20px;">
+                    <li>"Help me"</li>
+                    <li>"Save me"</li>
+                    <li>"Emergency"</li>
+                </ul>
+            </div>
+        </section>
 
-<!-- ABOUT -->
-<div id="about" class="section">
-    <h2>About</h2>
-    <p>Voice SOS App - Emergency Safety System</p>
-</div>
+        <!-- LOCATION SECTION -->
+        <section id="location-section" class="section">
+            <div class="card location-card">
+                <span class="map-icon">📍</span>
+                <h2>My Location</h2>
+                <div id="location-details">
+                    <p id="locationText">Click below to fetch your current GPS coordinates.</p>
+                </div>
+                <button class="btn-primary" onclick="updateLocationDisplay()">Refresh Location</button>
+            </div>
+        </section>
 
-<script>
+        <!-- ABOUT SECTION -->
+        <section id="about-section" class="section">
+            <div class="card">
+                <h2>About SafeGuard</h2>
+                <p style="line-height: 1.6; color: var(--text-dim);">
+                    SafeGuard is a cutting-edge Progressive Web App (PWA) designed to provide immediate assistance during emergencies. 
+                    <br><br>
+                    By combining real-time GPS tracking with instant SMS alerts and voice activation, we ensure that help is never more than a word or click away.
+                </p>
+                <p style="font-size: 12px; color: var(--text-dim); margin-top: 20px;">
+                    Version 2.0.0 (Premium)
+                </p>
+            </div>
+        </section>
+    </main>
 
-/* MENU */
-function openMenu() {
-    document.getElementById("sidebar").style.left = "0";
-}
-function closeMenu() {
-    document.getElementById("sidebar").style.left = "-260px";
-}
+    <div id="toast" class="toast">Action completed!</div>
 
-/* NAVIGATION */
-function showSection(id) {
-    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
-    document.getElementById(id).classList.add("active");
-    closeMenu();
-}
+    <script>
+        /* --- UI UTILITIES --- */
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
 
-/* CONTACTS */
-function addContact() {
-    let name = document.getElementById("name").value;
-    let phone = document.getElementById("phone").value;
+        function showSection(id) {
+            // Update Navigation UI
+            document.querySelectorAll('.nav-item').forEach(item => {
+                const text = item.innerText.toLowerCase();
+                if (text.includes(id)) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
 
-    if (!name || !phone) return alert("Enter details");
+            // Update Sections
+            document.querySelectorAll('.section').forEach(section => {
+                if (section.id === id + '-section') {
+                    section.classList.add('active');
+                } else {
+                    section.classList.remove('active');
+                }
+            });
 
-    let contacts = JSON.parse(localStorage.getItem("contacts")) || [];
-    contacts.push({name, phone});
-    localStorage.setItem("contacts", JSON.stringify(contacts));
+            // Close menu if open
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar.classList.contains('active')) toggleMenu();
+        }
 
-    displayContacts();
-}
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
 
-function displayContacts() {
-    let contacts = JSON.parse(localStorage.getItem("contacts")) || [];
-    let list = document.getElementById("contactList");
-    list.innerHTML = "";
+        /* --- CONTACTS MANAGEMENT --- */
+        function loadContacts() {
+            const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+            const container = document.getElementById('contact-list');
+            container.innerHTML = '';
 
-    contacts.forEach(c => {
-        list.innerHTML += `<li>${c.name} - ${c.phone}</li>`;
-    });
-}
-displayContacts();
+            if (contacts.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:var(--text-dim);">No contacts added yet.</p>';
+                return;
+            }
 
-/* LOCATION */
-function getLocation() {
-    navigator.geolocation.getCurrentPosition(pos => {
-        let link = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
-        document.getElementById("locationText").innerHTML =
-            `<a href="${link}" target="_blank">View Location</a>`;
-    });
-}
+            contacts.forEach((contact, index) => {
+                const div = document.createElement('div');
+                div.className = 'contact-item';
+                div.innerHTML = `
+                    <div class="contact-info">
+                        <h4>${contact.name}</h4>
+                        <p>${contact.phone}</p>
+                    </div>
+                    <button class="delete-btn" onclick="deleteContact(${index})">🗑️</button>
+                `;
+                container.appendChild(div);
+            });
+        }
 
-/* SOS FUNCTION */
-function triggerSOS() {
+        function addContact() {
+            const name = document.getElementById('contact-name').value.trim();
+            const phone = document.getElementById('contact-phone').value.trim();
 
-    let contacts = JSON.parse(localStorage.getItem("contacts")) || [];
+            if (!name || !phone) {
+                showToast('Please fill all fields');
+                return;
+            }
 
-    if (contacts.length === 0) {
-        alert("No contacts saved!");
-        return;
-    }
+            const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+            contacts.push({ name, phone });
+            localStorage.setItem('contacts', JSON.stringify(contacts));
+            
+            document.getElementById('contact-name').value = '';
+            document.getElementById('contact-phone').value = '';
+            
+            loadContacts();
+            showToast('Contact added successfully!');
+        }
 
-    navigator.geolocation.getCurrentPosition(async pos => {
+        function deleteContact(index) {
+            const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+            contacts.splice(index, 1);
+            localStorage.setItem('contacts', JSON.stringify(contacts));
+            loadContacts();
+            showToast('Contact removed');
+        }
 
-        let location = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+        /* --- LOCATION --- */
+        function getCoords() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject('Geolocation not supported');
+                }
+                navigator.geolocation.getCurrentPosition(
+                    pos => resolve(pos.coords),
+                    err => reject(err),
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
+            });
+        }
 
-        let numbers = contacts.map(c => c.phone);
+        async function updateLocationDisplay() {
+            const textEl = document.getElementById('locationText');
+            textEl.innerText = 'Fetching coordinates...';
+            try {
+                const coords = await getCoords();
+                const link = `https://maps.google.com/?q=${coords.latitude},${coords.longitude}`;
+                textEl.innerHTML = `<a href="${link}" target="_blank" style="color:var(--primary); text-decoration:none; font-weight:bold;">📍 View on Maps</a><br><br>Lat: ${coords.latitude.toFixed(5)}<br>Long: ${coords.longitude.toFixed(5)}`;
+            } catch (err) {
+                textEl.innerText = 'Failed to get location. Please enable GPS.';
+                showToast('Location error');
+            }
+        }
 
-        // SEND TO BACKEND
-        await fetch("http://localhost:3000/send-sos", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                contacts: numbers,
-                location: location
-            })
+        /* --- SOS TRIGGER --- */
+        let isProcessingSOS = false;
+
+        async function triggerSOS() {
+            if (isProcessingSOS) return;
+
+            const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+            if (contacts.length === 0) {
+                showToast('Please add emergency contacts first!');
+                showSection('contacts');
+                return;
+            }
+
+            isProcessingSOS = true;
+            const btn = document.getElementById('sos-btn');
+            const originalText = btn.innerText;
+            btn.innerText = '...';
+            btn.style.background = '#333';
+
+            try {
+                showToast('📡 Locating...');
+                const coords = await getCoords();
+                const locationUrl = `https://maps.google.com/?q=${coords.latitude},${coords.longitude}`;
+                const numbers = contacts.map(c => c.phone);
+
+                showToast('📨 Sending SOS...');
+                
+                const response = await fetch("/send-sos", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contacts: numbers,
+                        location: locationUrl
+                    })
+                });
+
+                if (response.ok) {
+                    showToast('🚨 SOS ALERT SENT!');
+                    // Pulse the whole screen red briefly
+                    document.body.style.boxShadow = 'inset 0 0 100px rgba(255,0,0,0.5)';
+                    setTimeout(() => document.body.style.boxShadow = 'none', 1000);
+                } else {
+                    throw new Error('Server error');
+                }
+
+            } catch (err) {
+                console.error(err);
+                showToast('❌ Failed to send SOS');
+            } finally {
+                isProcessingSOS = false;
+                btn.innerText = originalText;
+                btn.style.background = 'var(--primary)';
+            }
+        }
+
+        /* --- VOICE RECOGNITION --- */
+        let recognition;
+
+        function startVoiceRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                document.getElementById('voice-status').innerText = 'Not Supported';
+                document.getElementById('voice-subtext').innerText = 'Your browser does not support voice recognition.';
+                return;
+            }
+
+            if (recognition) recognition.stop();
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                document.getElementById('mic-icon').classList.add('listening');
+                document.getElementById('voice-status').innerText = 'Listening...';
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error', event.error);
+                document.getElementById('mic-icon').classList.remove('listening');
+                document.getElementById('voice-status').innerText = 'Voice Paused';
+                // Try to restart if it's not a permission error
+                if (event.error !== 'not-allowed') {
+                    setTimeout(startVoiceRecognition, 5000);
+                }
+            };
+
+            recognition.onend = () => {
+                document.getElementById('mic-icon').classList.remove('listening');
+                // Restart listening automatically
+                if (!isProcessingSOS) {
+                    recognition.start();
+                }
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+                console.log('Voice Command:', transcript);
+                
+                const triggers = ['help me', 'save me', 'emergency', 'help', 'sos'];
+                if (triggers.some(t => transcript.includes(t))) {
+                    triggerSOS();
+                }
+            };
+
+            try {
+                recognition.start();
+            } catch (e) {
+                console.warn('Recognition already started');
+            }
+        }
+
+        /* --- INIT --- */
+        document.addEventListener('DOMContentLoaded', () => {
+            loadContacts();
+            
+            // Try to start voice recognition on first click to satisfy browser policies
+            document.body.addEventListener('click', () => {
+                if (!recognition) startVoiceRecognition();
+            }, { once: true });
+
+            // Register Service Worker
+            if ("serviceWorker" in navigator) {
+                navigator.serviceWorker.register("sw.js")
+                    .then(() => console.log("Service Worker Active"))
+                    .catch(err => console.error("SW Registration failed", err));
+            }
         });
 
-        alert("🚨 SOS Sent to all contacts!");
-    });
-}
-
-/* VOICE DETECTION (AUTO + MANUAL) */
-function startListening() {
-
-    const recognition = new webkitSpeechRecognition();
-    recognition.continuous = true;
-    recognition.start();
-
-    document.getElementById("voiceStatus").innerText = "Listening...";
-
-    recognition.onresult = function(e) {
-        let text = e.results[e.results.length-1][0].transcript.toLowerCase();
-
-        if (text.includes("help me") || text.includes("save me")) {
-            triggerSOS();
-        }
-    };
-}
-
-/* AUTO START VOICE (IMPORTANT) */
-startListening();
-
-/* SERVICE WORKER */
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js")
-        .then(() => console.log("Service Worker Registered"))
-        .catch(err => console.log("SW Error", err));
-}
-
-</script>
-
+    </script>
 </body>
-</html>
+</html>
