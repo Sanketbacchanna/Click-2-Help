@@ -93,6 +93,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log("========================================");
     console.log(`🚀 SafeGuard Server running on port ${PORT}`);
-    console.log(`🔗 SOS Endpoint: http://localhost:${PORT}/send-sos`);
+    console.log(`🔗 SOS Endpoint: http://localhost:${PORT}/`);
     console.log("========================================");
 });
