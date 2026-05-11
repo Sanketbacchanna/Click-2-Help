@@ -466,6 +466,9 @@
             <div class="nav-item" onclick="showSection('location')">
                 <span>📍</span> Current Location
             </div>
+            <div class="nav-item" onclick="showSection('settings')">
+                <span>⚙️</span> Settings
+            </div>
             <div class="nav-item" onclick="showSection('about')">
                 <span>ℹ️</span> About SafeGuard
             </div>
@@ -536,6 +539,28 @@
                     <p id="locationText">Click below to fetch your current GPS coordinates.</p>
                 </div>
                 <button class="btn-primary" onclick="updateLocationDisplay()">Refresh Location</button>
+            </div>
+        </section>
+
+        <!-- SETTINGS SECTION -->
+        <section id="settings-section" class="section">
+            <div class="card">
+                <h2>Secret Activation Code</h2>
+                <p style="color: var(--text-dim); font-size: 14px; margin-bottom: 20px;">
+                    Set a secret word or sequence. Typing this while the app is open will trigger an immediate SOS alert.
+                </p>
+                <div class="input-group">
+                    <label>Secret Code</label>
+                    <input type="text" id="secret-code-input" placeholder="e.g. sos" value="sos">
+                </div>
+                <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+            </div>
+            <div class="card">
+                <h3>App Shortcut Hint</h3>
+                <p style="color: var(--text-dim); font-size: 14px; line-height: 1.6;">
+                    On your home screen, <b>long-press the SafeGuard icon</b> to see the "Emergency SOS" shortcut. 
+                    This allows you to trigger an alert even if the app was closed.
+                </p>
             </div>
         </section>
 
@@ -793,9 +818,51 @@
             }
         }
 
+        /* --- SETTINGS & SECRET CODE --- */
+        let secretCodeBuffer = "";
+        let secretCode = localStorage.getItem('secretCode') || "sos";
+
+        function saveSettings() {
+            const val = document.getElementById('secret-code-input').value.trim().toLowerCase();
+            if (val) {
+                localStorage.setItem('secretCode', val);
+                secretCode = val;
+                showToast('Settings saved!');
+            }
+        }
+
+        function handleSecretCode(key) {
+            secretCodeBuffer += key.toLowerCase();
+            if (secretCodeBuffer.endsWith(secretCode)) {
+                secretCodeBuffer = "";
+                triggerSOS();
+            }
+            // Keep buffer short
+            if (secretCodeBuffer.length > 20) {
+                secretCodeBuffer = secretCodeBuffer.substring(10);
+            }
+        }
+
         /* --- INIT --- */
         document.addEventListener('DOMContentLoaded', () => {
             loadContacts();
+            
+            // Check for Shortcut Action
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('action') === 'trigger-sos') {
+                // Short delay to ensure everything is ready
+                setTimeout(triggerSOS, 1000);
+            }
+
+            // Keyboard listener for secret code
+            document.addEventListener('keydown', (e) => {
+                // Ignore if in an input field (to allow typing normally)
+                if (e.target.tagName === 'INPUT') return;
+                handleSecretCode(e.key);
+            });
+
+            // Initialize settings input
+            document.getElementById('secret-code-input').value = secretCode;
             
             // Try to start voice recognition on first click to satisfy browser policies
             document.body.addEventListener('click', () => {

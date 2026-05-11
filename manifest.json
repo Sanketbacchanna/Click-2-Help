@@ -16,6 +16,15 @@
       "sizes": "512x512",
       "type": "image/png"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Emergency SOS",
+      "short_name": "SOS",
+      "description": "Send an immediate SOS alert to all saved contacts",
+      "url": "/index.html?action=trigger-sos",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }
 
