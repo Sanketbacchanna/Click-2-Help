@@ -528,6 +528,12 @@
                     <li>"Emergency"</li>
                 </ul>
             </div>
+            <div class="card">
+                <h3>🤝 Hands-Free: Shake to SOS</h3>
+                <p style="color: var(--text-dim); font-size: 14px; line-height: 1.6;">
+                    Vigorously shake your phone while the app is open to trigger an immediate SOS alert.
+                </p>
+            </div>
         </section>
 
         <!-- LOCATION SECTION -->
@@ -553,7 +559,11 @@
                     <label>Secret Code</label>
                     <input type="text" id="secret-code-input" placeholder="e.g. sos" value="sos">
                 </div>
-                <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+                <div class="input-group" style="display: flex; align-items: center; gap: 10px; margin-top: 20px;">
+                    <input type="checkbox" id="shake-trigger-toggle" style="width: 20px; height: 20px;" checked>
+                    <label style="margin: 0; text-transform: none; font-size: 14px;">Enable Shake Detection</label>
+                </div>
+                <button class="btn-primary" onclick="saveSettings()" style="margin-top: 10px;">Save Settings</button>
             </div>
             <div class="card">
                 <h3>App Shortcut Hint</h3>
@@ -821,14 +831,18 @@
         /* --- SETTINGS & SECRET CODE --- */
         let secretCodeBuffer = "";
         let secretCode = localStorage.getItem('secretCode') || "sos";
+        let shakeEnabled = localStorage.getItem('shakeEnabled') !== 'false';
 
         function saveSettings() {
             const val = document.getElementById('secret-code-input').value.trim().toLowerCase();
+            shakeEnabled = document.getElementById('shake-trigger-toggle').checked;
+            
             if (val) {
                 localStorage.setItem('secretCode', val);
                 secretCode = val;
-                showToast('Settings saved!');
             }
+            localStorage.setItem('shakeEnabled', shakeEnabled);
+            showToast('Settings saved!');
         }
 
         function handleSecretCode(key) {
@@ -843,6 +857,59 @@
             }
         }
 
+        /* --- HANDS-FREE: SHAKE DETECTION --- */
+        let lastX, lastY, lastZ;
+        let moveCounter = 0;
+
+        function initShakeDetection() {
+            if (!window.DeviceMotionEvent) {
+                console.warn('DeviceMotionEvent not supported');
+                return;
+            }
+
+            window.addEventListener('devicemotion', (event) => {
+                if (!shakeEnabled || isProcessingSOS) return;
+
+                const acc = event.accelerationIncludingGravity;
+                if (!acc.x) return;
+
+                const deltaX = Math.abs(acc.x - lastX);
+                const deltaY = Math.abs(acc.y - lastY);
+                const deltaZ = Math.abs(acc.z - lastZ);
+
+                if ((deltaX > 15 && deltaY > 15) || (deltaX > 15 && deltaZ > 15) || (deltaY > 15 && deltaZ > 15)) {
+                    moveCounter++;
+                    if (moveCounter > 5) {
+                        console.log('Shake detected!');
+                        triggerSOS();
+                        moveCounter = 0;
+                    }
+                } else {
+                    moveCounter = Math.max(0, moveCounter - 1);
+                }
+
+                lastX = acc.x;
+                lastY = acc.y;
+                lastZ = acc.z;
+            });
+        }
+
+        /* --- HANDS-FREE: WAKE LOCK --- */
+        let wakeLock = null;
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock active');
+                    wakeLock.addEventListener('release', () => {
+                        console.log('Wake Lock released');
+                    });
+                }
+            } catch (err) {
+                console.warn(`Wake Lock error: ${err.name}, ${err.message}`);
+            }
+        }
+
         /* --- INIT --- */
         document.addEventListener('DOMContentLoaded', () => {
             loadContacts();
@@ -850,23 +917,28 @@
             // Check for Shortcut Action
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('action') === 'trigger-sos') {
-                // Short delay to ensure everything is ready
-                setTimeout(triggerSOS, 1000);
+                // Almost immediate trigger for shortcuts
+                setTimeout(triggerSOS, 300);
             }
 
             // Keyboard listener for secret code
             document.addEventListener('keydown', (e) => {
-                // Ignore if in an input field (to allow typing normally)
                 if (e.target.tagName === 'INPUT') return;
                 handleSecretCode(e.key);
             });
 
-            // Initialize settings input
+            // Initialize settings inputs
             document.getElementById('secret-code-input').value = secretCode;
+            document.getElementById('shake-trigger-toggle').checked = shakeEnabled;
             
-            // Try to start voice recognition on first click to satisfy browser policies
+            // Start hands-free modules
+            initShakeDetection();
+            requestWakeLock();
+
+            // Try to start voice recognition and wake lock on interaction
             document.body.addEventListener('click', () => {
                 if (!recognition) startVoiceRecognition();
+                requestWakeLock();
             }, { once: true });
 
             // Register Service Worker
