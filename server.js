@@ -1,15 +1,57 @@
 const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 const cors = require("cors");
 const twilio = require("twilio");
 const path = require("path");
+const crypto = require("crypto");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
+
 app.use(cors());
 app.use(express.json());
 
 // Serve frontend files
 app.use(express.static(path.join(__dirname, ".")));
+
+// Store active tracking sessions (last known location)
+const activeSessions = new Map();
+
+// Socket.io logic
+io.on("connection", (socket) => {
+    // Join a tracking room
+    socket.on("join-tracking", (sessionId) => {
+        socket.join(sessionId);
+        console.log(`[Socket] User joined tracking session: ${sessionId}`);
+        
+        // If we have a last known location, send it immediately
+        if (activeSessions.has(sessionId)) {
+            socket.emit("location-update", activeSessions.get(sessionId));
+        }
+    });
+
+    // Update location (from sender)
+    socket.on("update-location", (data) => {
+        const { sessionId, location } = data;
+        if (sessionId) {
+            activeSessions.set(sessionId, location);
+            // Broadcast to everyone in the room
+            io.to(sessionId).emit("location-update", location);
+        }
+    });
+
+    socket.on("disconnect", () => {
+        // Optional: Clean up session after some time if sender disconnects
+    });
+});
 
 // Add a GET route for /send-sos to handle browser visits
 app.get("/send-sos", (req, res) => {
@@ -18,12 +60,11 @@ app.get("/send-sos", (req, res) => {
 
 const accountSid = process.env.TWILIO_SID;
 const authToken = process.env.TWILIO_AUTH;
-const twilioNumber = process.env.TWILIO_NUMBER || "+18398677377"; // Fallback to provided number if not in env
+const twilioNumber = process.env.TWILIO_NUMBER || "+18398677377"; 
 
 // Validate Credentials
 if (!accountSid || !authToken) {
     console.warn("⚠️  WARNING: Twilio credentials (TWILIO_SID, TWILIO_AUTH) are missing in .env");
-    console.warn("Backend will run, but SOS messages will fail to send.");
 }
 
 let client;
@@ -42,15 +83,19 @@ app.post("/send-sos", async (req, res) => {
         return res.status(400).send({ success: false, error: "No contacts provided" });
     }
 
-    console.log(`[${new Date().toISOString()}] 📨 SOS Triggered!`);
-    console.log("📍 Location:", location);
-    console.log("👥 Contacts:", contacts);
+    // Generate a unique tracking session ID
+    const sessionId = crypto.randomBytes(4).toString('hex'); 
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.get('host');
+    const trackingLink = `${protocol}://${host}/track.html?id=${sessionId}`;
+
+    console.log(`[${new Date().toISOString()}] 📨 SOS Triggered! Tracking ID: ${sessionId}`);
 
     if (!client) {
-        console.error("❌ SOS Failed: Twilio client not initialized (check .env)");
+        console.error("❌ SOS Failed: Twilio client not initialized");
         return res.status(500).send({
             success: false,
-            error: "SMS service not configured on server. Please check environment variables."
+            error: "SMS service not configured on server."
         });
     }
 
@@ -58,13 +103,12 @@ app.post("/send-sos", async (req, res) => {
         const results = await Promise.allSettled(
             contacts.map(number => {
                 let formattedNumber = number.trim();
-                // Basic normalization for India numbers if country code missing
                 if (!formattedNumber.startsWith("+")) {
                     formattedNumber = "+91" + formattedNumber;
                 }
 
                 return client.messages.create({
-                    body: `🚨 EMERGENCY! I need help.\n\nMy real-time location:\n${location}`,
+                    body: `🚨 EMERGENCY! I need help.\n\n📍 LIVE TRACKING:\n${trackingLink}\n\nLast known location:\n${location}`,
                     from: twilioNumber,
                     to: formattedNumber
                 });
@@ -77,7 +121,7 @@ app.post("/send-sos", async (req, res) => {
         console.log(`✅ Sent: ${successful}, ❌ Failed: ${failed}`);
 
         if (successful > 0) {
-            res.send({ success: true, sent: successful, failed: failed });
+            res.send({ success: true, sent: successful, failed: failed, sessionId: sessionId });
         } else {
             const firstError = results.find(r => r.status === 'rejected')?.reason?.message;
             throw new Error(firstError || "Failed to send any messages");
@@ -90,9 +134,10 @@ app.post("/send-sos", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log("========================================");
     console.log(`🚀 SafeGuard Server running on port ${PORT}`);
-    console.log(`🔗 SOS Endpoint: http://localhost:${PORT}/`);
+    console.log(`🔗 Tracking enabled via Socket.io`);
     console.log("========================================");
 });
+

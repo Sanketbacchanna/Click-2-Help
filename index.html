@@ -592,7 +592,12 @@
 
     <div id="toast" class="toast">Action completed!</div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
+        const socket = io();
+        let trackingInterval;
+        let currentSessionId;
+
         /* --- UI UTILITIES --- */
         function toggleMenu() {
             const sidebar = document.getElementById('sidebar');
@@ -752,7 +757,14 @@
                 });
 
                 if (response.ok) {
+                    const data = await response.json();
+                    currentSessionId = data.sessionId;
+                    
                     showToast('🚨 SOS ALERT SENT!');
+                    
+                    // Start Live Tracking
+                    startLiveTracking(currentSessionId);
+
                     // Pulse the whole screen red briefly
                     document.body.style.boxShadow = 'inset 0 0 100px rgba(255,0,0,0.5)';
                     setTimeout(() => document.body.style.boxShadow = 'none', 1000);
@@ -767,6 +779,37 @@
                 isProcessingSOS = false;
                 btn.innerText = originalText;
                 btn.style.background = 'var(--primary)';
+            }
+        }
+
+        function startLiveTracking(sessionId) {
+            if (trackingInterval) clearInterval(trackingInterval);
+            
+            // Send initial location
+            sendLocationUpdate(sessionId);
+            
+            // Update every 5 seconds
+            trackingInterval = setInterval(() => {
+                sendLocationUpdate(sessionId);
+            }, 5000);
+            
+            showToast('📍 Live tracking active');
+        }
+
+        async function sendLocationUpdate(sessionId) {
+            try {
+                const coords = await getCoords();
+                socket.emit('update-location', {
+                    sessionId: sessionId,
+                    location: {
+                        lat: coords.latitude,
+                        lng: coords.longitude,
+                        accuracy: coords.accuracy,
+                        timestamp: new Date().toISOString()
+                    }
+                });
+            } catch (err) {
+                console.warn('Tracking update failed:', err);
             }
         }
 
