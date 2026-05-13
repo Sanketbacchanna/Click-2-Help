@@ -102,13 +102,25 @@ app.post("/send-sos", async (req, res) => {
     try {
         const results = await Promise.allSettled(
             contacts.map(number => {
-                let formattedNumber = number.trim();
+                // 1. Clean the number: remove all non-digits (except +)
+                let cleaned = number.replace(/[^\d+]/g, "").trim();
+                
+                // 2. Handle leading 0s (common mistake)
+                if (cleaned.startsWith("0")) {
+                    cleaned = cleaned.substring(1);
+                }
+                
+                // 3. Ensure international format (+91 for India by default)
+                let formattedNumber = cleaned;
                 if (!formattedNumber.startsWith("+")) {
                     formattedNumber = "+91" + formattedNumber;
                 }
 
+                // 4. Simplified body for better delivery
+                const body = `SafeGuard SOS Alert: I need help. \nLive Track: ${trackingLink}`;
+
                 return client.messages.create({
-                    body: `🚨 EMERGENCY! I need help.\n\n📍 LIVE TRACKING:\n${trackingLink}\n\nLast known location:\n${location}`,
+                    body: body,
                     from: twilioNumber,
                     to: formattedNumber
                 });
