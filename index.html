@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,7 +31,8 @@
             font-family: 'Outfit', sans-serif;
             background: var(--bg);
             color: var(--text);
-            overflow: hidden; /* Prevent body scroll, use sections for scroll */
+            overflow: hidden;
+            /* Prevent body scroll, use sections for scroll */
             height: 100vh;
             display: flex;
             flex-direction: column;
@@ -52,8 +54,15 @@
         }
 
         @keyframes pulse-bg {
-            from { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
-            to { transform: translate(-50%, -50%) scale(1.2); opacity: 0.6; }
+            from {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.3;
+            }
+
+            to {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 0.6;
+            }
         }
 
         /* Top Bar */
@@ -95,7 +104,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
             opacity: 0;
             visibility: hidden;
@@ -145,7 +154,8 @@
             color: var(--text-dim);
         }
 
-        .nav-item:hover, .nav-item.active {
+        .nav-item:hover,
+        .nav-item.active {
             background: var(--surface);
             color: var(--text);
         }
@@ -209,12 +219,24 @@
             animation: ring-pulse 2s infinite ease-out;
         }
 
-        .sos-ring:nth-child(2) { animation-delay: 0.5s; }
-        .sos-ring:nth-child(3) { animation-delay: 1s; }
+        .sos-ring:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .sos-ring:nth-child(3) {
+            animation-delay: 1s;
+        }
 
         @keyframes ring-pulse {
-            from { transform: scale(0.8); opacity: 0.6; }
-            to { transform: scale(1.5); opacity: 0; }
+            from {
+                transform: scale(0.8);
+                opacity: 0.6;
+            }
+
+            to {
+                transform: scale(1.5);
+                opacity: 0;
+            }
         }
 
         .sos-btn {
@@ -279,7 +301,7 @@
 
         input {
             width: 100%;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0, 0, 0, 0.2);
             border: 1px solid var(--surface-border);
             border-radius: 12px;
             padding: 14px 16px;
@@ -292,7 +314,7 @@
         input:focus {
             outline: none;
             border-color: var(--primary);
-            background: rgba(0,0,0,0.4);
+            background: rgba(0, 0, 0, 0.4);
         }
 
         .btn-primary {
@@ -323,7 +345,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 16px;
-            background: rgba(255,255,255,0.03);
+            background: rgba(255, 255, 255, 0.03);
             border-radius: 16px;
             margin-bottom: 12px;
             border: 1px solid var(--surface-border);
@@ -383,9 +405,17 @@
         }
 
         @keyframes mic-pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
         .status-text {
@@ -427,7 +457,7 @@
             padding: 12px 24px;
             border-radius: 30px;
             font-weight: 600;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             z-index: 2000;
             transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
@@ -435,9 +465,9 @@
         .toast.show {
             transform: translateX(-50%) translateY(0);
         }
-
     </style>
 </head>
+
 <body>
 
     <div class="bg-glow"></div>
@@ -472,7 +502,9 @@
             <div class="nav-item" onclick="showSection('about')">
                 <span>ℹ️</span> About SafeGuard
             </div>
-            <div class="nav-item" id="install-item" style="display: none; border-top: 1px solid var(--surface-border); margin-top: 10px; color: var(--primary);" onclick="installPWA()">
+            <div class="nav-item" id="install-item"
+                style="display: none; border-top: 1px solid var(--surface-border); margin-top: 10px; color: var(--primary);"
+                onclick="installPWA()">
                 <span>📲</span> Install App
             </div>
         </div>
@@ -518,7 +550,8 @@
                 <div class="mic-icon" id="mic-icon">🎤</div>
                 <div class="status-text" id="voice-status">Waiting...</div>
                 <div class="sub-status" id="voice-subtext">Voice activation is running in the background.</div>
-                <button class="btn-primary" onclick="startVoiceRecognition()" style="margin-top: 10px;">Restart Listening</button>
+                <button class="btn-primary" onclick="startVoiceRecognition()" style="margin-top: 10px;">Restart
+                    Listening</button>
             </div>
             <div class="card">
                 <h3>Voice Commands</h3>
@@ -556,7 +589,8 @@
             <div class="card">
                 <h2>Secret Activation Code</h2>
                 <p style="color: var(--text-dim); font-size: 14px; margin-bottom: 20px;">
-                    Set a secret word or sequence. Typing this while the app is open will trigger an immediate SOS alert.
+                    Set a secret word or sequence. Typing this while the app is open will trigger an immediate SOS
+                    alert.
                 </p>
                 <div class="input-group">
                     <label>Secret Code</label>
@@ -571,7 +605,7 @@
             <div class="card">
                 <h3>App Shortcut Hint</h3>
                 <p style="color: var(--text-dim); font-size: 14px; line-height: 1.6;">
-                    On your home screen, <b>long-press the SafeGuard icon</b> to see the "Emergency SOS" shortcut. 
+                    On your home screen, <b>long-press the SafeGuard icon</b> to see the "Emergency SOS" shortcut.
                     This allows you to trigger an alert even if the app was closed.
                 </p>
             </div>
@@ -582,9 +616,11 @@
             <div class="card">
                 <h2>About SafeGuard</h2>
                 <p style="line-height: 1.6; color: var(--text-dim);">
-                    SafeGuard is a cutting-edge Progressive Web App (PWA) designed to provide immediate assistance during emergencies. 
+                    SafeGuard is a cutting-edge Progressive Web App (PWA) designed to provide immediate assistance
+                    during emergencies.
                     <br><br>
-                    By combining real-time GPS tracking with instant SMS alerts and voice activation, we ensure that help is never more than a word or click away.
+                    By combining GPS location sharing with instant SMS alerts and voice activation, we ensure that help
+                    is never more than a word or click away.
                 </p>
                 <p style="font-size: 12px; color: var(--text-dim); margin-top: 20px;">
                     Version 2.0.0 (Premium)
@@ -598,8 +634,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        let trackingInterval;
-        let currentSessionId;
+
 
         /* --- UI UTILITIES --- */
         function toggleMenu() {
@@ -680,10 +715,10 @@
             const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
             contacts.push({ name, phone });
             localStorage.setItem('contacts', JSON.stringify(contacts));
-            
+
             document.getElementById('contact-name').value = '';
             document.getElementById('contact-phone').value = '';
-            
+
             loadContacts();
             showToast('Contact added successfully!');
         }
@@ -749,7 +784,7 @@
                 const numbers = contacts.map(c => c.phone);
 
                 showToast('📨 Sending SOS...');
-                
+
                 const response = await fetch("/send-sos", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -759,21 +794,14 @@
                     })
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    currentSessionId = data.sessionId;
-                    
-                    showToast('🚨 SOS ALERT SENT!');
-                    
-                    // Start Live Tracking
-                    startLiveTracking(currentSessionId);
+                showToast('🚨 SOS ALERT SENT!');
 
-                    // Pulse the whole screen red briefly
-                    document.body.style.boxShadow = 'inset 0 0 100px rgba(255,0,0,0.5)';
-                    setTimeout(() => document.body.style.boxShadow = 'none', 1000);
-                } else {
-                    throw new Error('Server error');
-                }
+                // Pulse the whole screen red briefly
+                document.body.style.boxShadow = 'inset 0 0 100px rgba(255,0,0,0.5)';
+                setTimeout(() => document.body.style.boxShadow = 'none', 1000);
+                // } else {
+                //     throw new Error('Server error');
+                // }
 
             } catch (err) {
                 console.error(err);
@@ -785,36 +813,7 @@
             }
         }
 
-        function startLiveTracking(sessionId) {
-            if (trackingInterval) clearInterval(trackingInterval);
-            
-            // Send initial location
-            sendLocationUpdate(sessionId);
-            
-            // Update every 5 seconds
-            trackingInterval = setInterval(() => {
-                sendLocationUpdate(sessionId);
-            }, 5000);
-            
-            showToast('📍 Live tracking active');
-        }
 
-        async function sendLocationUpdate(sessionId) {
-            try {
-                const coords = await getCoords();
-                socket.emit('update-location', {
-                    sessionId: sessionId,
-                    location: {
-                        lat: coords.latitude,
-                        lng: coords.longitude,
-                        accuracy: coords.accuracy,
-                        timestamp: new Date().toISOString()
-                    }
-                });
-            } catch (err) {
-                console.warn('Tracking update failed:', err);
-            }
-        }
 
         /* --- VOICE RECOGNITION --- */
         let isRecognitionRunning = false;
@@ -830,7 +829,7 @@
             if (isRecognitionRunning) return;
 
             if (recognition) {
-                try { recognition.stop(); } catch(e) {}
+                try { recognition.stop(); } catch (e) { }
             }
 
             recognition = new SpeechRecognition();
@@ -849,7 +848,7 @@
                 isRecognitionRunning = false;
                 document.getElementById('mic-icon').classList.remove('listening');
                 document.getElementById('voice-status').innerText = 'Voice Paused';
-                
+
                 // Don't restart if it's a permission error
                 if (event.error === 'not-allowed') return;
             };
@@ -868,7 +867,7 @@
             recognition.onresult = (event) => {
                 const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
                 console.log('Voice Command:', transcript);
-                
+
                 const triggers = ['help me', 'save me', 'emergency', 'help', 'sos'];
                 if (triggers.some(t => transcript.includes(t))) {
                     triggerSOS();
@@ -890,7 +889,7 @@
         function saveSettings() {
             const val = document.getElementById('secret-code-input').value.trim().toLowerCase();
             shakeEnabled = document.getElementById('shake-trigger-toggle').checked;
-            
+
             if (val) {
                 localStorage.setItem('secretCode', val);
                 secretCode = val;
@@ -967,7 +966,7 @@
         /* --- INIT --- */
         document.addEventListener('DOMContentLoaded', () => {
             loadContacts();
-            
+
             // Check for Shortcut Action
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('action') === 'trigger-sos') {
@@ -984,7 +983,7 @@
             // Initialize settings inputs
             document.getElementById('secret-code-input').value = secretCode;
             document.getElementById('shake-trigger-toggle').checked = shakeEnabled;
-            
+
             // Start hands-free modules
             initShakeDetection();
             requestWakeLock();
@@ -1038,4 +1037,5 @@
 
     </script>
 </body>
-</html>
+
+</html>
