@@ -705,7 +705,7 @@
                 navigator.geolocation.getCurrentPosition(
                     pos => resolve(pos.coords),
                     err => reject(err),
-                    { enableHighAccuracy: true, timeout: 5000 }
+                    { enableHighAccuracy: true, timeout: 10000 }
                 );
             });
         }
@@ -817,7 +817,7 @@
         }
 
         /* --- VOICE RECOGNITION --- */
-        let recognition;
+        let isRecognitionRunning = false;
 
         function startVoiceRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -827,7 +827,11 @@
                 return;
             }
 
-            if (recognition) recognition.stop();
+            if (isRecognitionRunning) return;
+
+            if (recognition) {
+                try { recognition.stop(); } catch(e) {}
+            }
 
             recognition = new SpeechRecognition();
             recognition.continuous = true;
@@ -835,25 +839,29 @@
             recognition.lang = 'en-US';
 
             recognition.onstart = () => {
+                isRecognitionRunning = true;
                 document.getElementById('mic-icon').classList.add('listening');
                 document.getElementById('voice-status').innerText = 'Listening...';
             };
 
             recognition.onerror = (event) => {
                 console.error('Speech recognition error', event.error);
+                isRecognitionRunning = false;
                 document.getElementById('mic-icon').classList.remove('listening');
                 document.getElementById('voice-status').innerText = 'Voice Paused';
-                // Try to restart if it's not a permission error
-                if (event.error !== 'not-allowed') {
-                    setTimeout(startVoiceRecognition, 5000);
-                }
+                
+                // Don't restart if it's a permission error
+                if (event.error === 'not-allowed') return;
             };
 
             recognition.onend = () => {
+                isRecognitionRunning = false;
                 document.getElementById('mic-icon').classList.remove('listening');
-                // Restart listening automatically
+                // Restart listening automatically after a short delay
                 if (!isProcessingSOS) {
-                    recognition.start();
+                    setTimeout(() => {
+                        if (!isRecognitionRunning) startVoiceRecognition();
+                    }, 1000);
                 }
             };
 
