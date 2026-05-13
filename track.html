@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SafeGuard | Live Tracking</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <style>
         :root {
             --primary: #FF3B30;
@@ -66,7 +68,7 @@
             border-radius: 20px;
             padding: 20px;
             z-index: 1000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -100,9 +102,20 @@
         }
 
         @keyframes pulse-animation {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(76, 217, 100, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(76, 217, 100, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(76, 217, 100, 0); }
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(76, 217, 100, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(76, 217, 100, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(76, 217, 100, 0);
+            }
         }
 
         .user-info h2 {
@@ -126,6 +139,7 @@
         .leaflet-container {
             background: #111 !important;
         }
+
         .leaflet-bar a {
             background-color: var(--glass) !important;
             color: white !important;
@@ -133,6 +147,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <header>
@@ -218,4 +233,5 @@
         }
     </script>
 </body>
+
 </html>
