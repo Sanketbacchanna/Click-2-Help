@@ -472,6 +472,9 @@
             <div class="nav-item" onclick="showSection('about')">
                 <span>ℹ️</span> About SafeGuard
             </div>
+            <div class="nav-item" id="install-item" style="display: none; border-top: 1px solid var(--surface-border); margin-top: 10px; color: var(--primary);" onclick="installPWA()">
+                <span>📲</span> Install App
+            </div>
         </div>
     </nav>
 
@@ -990,6 +993,39 @@
                     .then(() => console.log("Service Worker Active"))
                     .catch(err => console.error("SW Registration failed", err));
             }
+        });
+
+        /* --- PWA INSTALLATION --- */
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            deferredPrompt = e;
+            // Update UI notify the user they can add to home screen
+            const installItem = document.getElementById('install-item');
+            if (installItem) installItem.style.display = 'flex';
+        });
+
+        async function installPWA() {
+            if (!deferredPrompt) return;
+            // Show the prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            // We've used the prompt, and can't use it again, throw it away
+            deferredPrompt = null;
+            // Hide the install button
+            const installItem = document.getElementById('install-item');
+            if (installItem) installItem.style.display = 'none';
+        }
+
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('SafeGuard was installed.');
+            const installItem = document.getElementById('install-item');
+            if (installItem) installItem.style.display = 'none';
+            showToast('App installed successfully!');
         });
 
     </script>
